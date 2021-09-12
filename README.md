@@ -11,4 +11,6 @@ A react web app to generate an m3u playlist for the channels subscribed on Tata 
 5) Generate m3u playlist
 6) Enjoy!
 
+If you want to generate m3u URL instead of file, create .env file and add your firebase config values as shown in .env.example file.
+
 ### Feel free to contribute :smiley:

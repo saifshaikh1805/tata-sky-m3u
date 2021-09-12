@@ -1,12 +1,12 @@
-import logo from './logo.svg';
+//import logo from './logo.svg';
 import './App.css';
-import { Button, Form, Grid, Header, Image, Input, Message, Segment } from 'semantic-ui-react';
+import { Button, Form, Grid, Header, Image, Message, Segment } from 'semantic-ui-react';
 import { useEffect, useState } from 'react';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { fireStorage } from './firebaseConfig';
 
 function App() {
-// debugger;
+  // debugger;
   const [rmn, setRmn] = useState("");
   const [sid, setSid] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -16,6 +16,11 @@ function App() {
   const [m3uMeta, setM3uMeta] = useState(null);
   const [loading, setLoading] = useState(false);
   const [firebaseValid, setFirebaseValid] = useState(false);
+  const [err, setError] = useState("");
+
+  var corsUrl = process.env.REACT_APP_CORSANYWHERE;
+  if (corsUrl === "" || corsUrl === undefined)
+    corsUrl = "https://cors.bridged.cc/";
 
   useEffect(() => {
     if (fireStorage.app.options.projectId !== undefined)
@@ -45,16 +50,23 @@ function App() {
 
     let res = {};
 
-    fetch(process.env.REACT_APP_CORSANYWHERE + "https://kong-tatasky.videoready.tv/rest-api/pub/api/v1/rmn/" + rmn + "/otp", requestOptions)
+    fetch(corsUrl + "https://kong-tatasky.videoready.tv/rest-api/pub/api/v1/rmn/" + rmn + "/otp", requestOptions)
       .then(response => response.text())
       .then(result => {
         res = JSON.parse(result);
         setLoading(false);
         console.log(res);
-        if (res.message.indexOf("OTP generated successfully") === 0)
+        if (res.message.indexOf("OTP generated successfully") === 0) {
           setOtpSent(true);
+          setError("");
+        }
+        else
+          setError(res.message);
       })
-      .catch(error => console.log('error', error));
+      .catch(error => {
+        console.log('error', error);
+        setError(error.toString());
+      });
   }
 
   const authenticateUser = () => {
@@ -92,20 +104,30 @@ function App() {
 
     let res = {};
 
-    fetch(process.env.REACT_APP_CORSANYWHERE + "https://kong-tatasky.videoready.tv/rest-api/pub/api/v2/login/ott", requestOptions)
+    fetch(corsUrl + "https://kong-tatasky.videoready.tv/rest-api/pub/api/v2/login/ott", requestOptions)
       .then(response => response.text())
       .then(result => {
         res = JSON.parse(result);
         console.log(res);
-        let userDetails = res.data.userDetails;
-        let token = res.data.accessToken;
-        setUser(userDetails);
-        setToken(token);
-        localStorage.setItem("userDetails", JSON.stringify(userDetails));
-        localStorage.setItem("token", token);
-        setLoading(false);
+        if (res.code === 0) {
+          let userDetails = res.data.userDetails;
+          let token = res.data.accessToken;
+          setUser(userDetails);
+          setToken(token);
+          localStorage.setItem("userDetails", JSON.stringify(userDetails));
+          localStorage.setItem("token", token);
+          setError("");
+        }
+        else {
+          setError(res.message);
+          setLoading(false);
+        }
       })
-      .catch(error => console.log('error', error));
+      .catch(error => {
+        console.log('error', error);
+        setError(error.toString());
+        setLoading(false);
+      });
   }
 
   const getAllChans = async () => {
@@ -116,7 +138,7 @@ function App() {
     let err = null;
     let res = null;
 
-    await fetch(process.env.REACT_APP_CORSANYWHERE + "https://ts-api.videoready.tv/content-detail/pub/api/v1/channels?limit=534", requestOptions)
+    await fetch(corsUrl + "https://ts-api.videoready.tv/content-detail/pub/api/v1/channels?limit=534", requestOptions)
       .then(response => response.text())
       .then(result => res = JSON.parse(result))
       .then(r => r)
@@ -151,7 +173,7 @@ function App() {
     let err = null;
     let res = null;
 
-    await fetch(process.env.REACT_APP_CORSANYWHERE + "https://kong-tatasky.videoready.tv/auth-service/v1/oauth/token-service/token", requestOptions)
+    await fetch(corsUrl + "https://kong-tatasky.videoready.tv/auth-service/v1/oauth/token-service/token", requestOptions)
       .then(response => response.text())
       .then(result => res = JSON.parse(result))
       .catch(error => err = error);
@@ -172,7 +194,7 @@ function App() {
 
     await Promise.all(
       userChannels.map(x =>
-        fetch(process.env.REACT_APP_CORSANYWHERE + "https://kong-tatasky.videoready.tv/content-detail/pub/api/v1/channels/" + x.id, requestOptions)
+        fetch(corsUrl + "https://kong-tatasky.videoready.tv/content-detail/pub/api/v1/channels/" + x.id, requestOptions)
           .then(r => r.json())
           .catch(error => err = error)
       )
@@ -284,68 +306,75 @@ function App() {
   return (
     <div>
       {
-        token === "" || theUser === null ?
-          <Grid columns='equal' padded>
-            <Grid.Column>
-
-            </Grid.Column>
+        <Grid columns='equal' padded>
+          {
+            token === "" || theUser === null ?
+              <Grid.Row>
+                <Grid.Column></Grid.Column>
+                <Grid.Column computer={8} tablet={12} mobile={16}>
+                  <Segment loading={loading}>
+                    <Form>
+                      <Form.Field disabled={otpSent}>
+                        <label>RMN</label>
+                        <input value={rmn} placeholder='Registered Mobile Number' onChange={(e) => setRmn(e.currentTarget.value)} />
+                      </Form.Field>
+                      <Form.Field disabled={otpSent}>
+                        <label>Subscriber ID</label>
+                        <input value={sid} placeholder='Subscriber ID' onChange={(e) => setSid(e.currentTarget.value)} />
+                      </Form.Field>
+                      <Form.Field disabled={!otpSent}>
+                        <label>OTP</label>
+                        <input value={otp} placeholder='OTP' onChange={(e) => setOtp(e.currentTarget.value)} />
+                      </Form.Field>
+                      {
+                        otpSent ? <Button primary onClick={authenticateUser}>Login</Button> :
+                          <Button primary onClick={getOTP}>Get OTP</Button>
+                      }
+                    </Form>
+                  </Segment>
+                </Grid.Column>
+                <Grid.Column></Grid.Column>
+              </Grid.Row> :
+              <Grid.Row>
+                <Grid.Column></Grid.Column>
+                <Grid.Column computer={8} tablet={12} mobile={16}>
+                  <Segment loading={loading}>
+                    <Header as="h1">Welcome, {theUser.sName}</Header>
+                    {
+                      firebaseValid ?
+                        <Button primary onClick={(rt) => generateM3u('url')}>Generate m3u URL</Button>
+                        : <></>
+                    }
+                    <Button primary onClick={(rt) => generateM3u('file')}>Download m3u file</Button>
+                    <Button negative onClick={logout}>Logout</Button>
+                    {
+                      m3uMeta !== null ?
+                        <Message >
+                          <Message.Header>Last generated on {new Date(m3uMeta.updated).toLocaleString()}</Message.Header>
+                          <Image centered src={'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' + encodeURIComponent(m3uMeta.url)} size='small' />
+                          <p>
+                            <a href={m3uMeta.url}>{m3uMeta.url}</a>
+                          </p>
+                        </Message> : <></>
+                    }
+                  </Segment>
+                </Grid.Column>
+                <Grid.Column></Grid.Column>
+              </Grid.Row>
+          }
+          <Grid.Row style={{ display: err === '' ? 'none' : 'block' }}>
+            <Grid.Column></Grid.Column>
             <Grid.Column computer={8} tablet={12} mobile={16}>
-              <Segment loading={loading}>
-                <Form>
-                  <Form.Field disabled={otpSent}>
-                    <label>RMN</label>
-                    <input value={rmn} placeholder='Registered Mobile Number' onChange={(e) => setRmn(e.currentTarget.value)} />
-                  </Form.Field>
-                  <Form.Field disabled={otpSent}>
-                    <label>Subscriber ID</label>
-                    <input value={sid} placeholder='Subscriber ID' onChange={(e) => setSid(e.currentTarget.value)} />
-                  </Form.Field>
-                  <Form.Field disabled={!otpSent}>
-                    <label>OTP</label>
-                    <input value={otp} placeholder='OTP' onChange={(e) => setOtp(e.currentTarget.value)} />
-                  </Form.Field>
-                  {
-                    otpSent ? <Button primary onClick={authenticateUser}>Login</Button> :
-                      <Button primary onClick={getOTP}>Get OTP</Button>
-                  }
-                </Form>
-              </Segment>
+              <Message color='red'>
+                <Message.Header>Error</Message.Header>
+                <p>
+                  {err}
+                </p>
+              </Message>
             </Grid.Column>
-            <Grid.Column>
-
-            </Grid.Column>
-          </Grid>
-          :
-          <Grid columns='equal' padded>
-            <Grid.Column>
-
-            </Grid.Column>
-            <Grid.Column computer={8} tablet={12} mobile={16}>
-              <Segment loading={loading}>
-                <Header as="h1">Welcome, {theUser.sName}</Header>
-                {
-                  firebaseValid ?
-                    <Button primary onClick={(rt) => generateM3u('url')}>Generate m3u URL</Button>
-                    : <></>
-                }
-                <Button primary onClick={(rt) => generateM3u('file')}>Download m3u file</Button>
-                <Button negative onClick={logout}>Logout</Button>
-                {
-                  m3uMeta !== null ?
-                    <Message >
-                      <Message.Header>Last generated on {new Date(m3uMeta.updated).toLocaleString()}</Message.Header>
-                      <Image centered src={'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' + encodeURIComponent(m3uMeta.url)} size='small' />
-                      <p>
-                        <a href={m3uMeta.url}>{m3uMeta.url}</a>
-                      </p>
-                    </Message> : <></>
-                }
-              </Segment>
-            </Grid.Column>
-            <Grid.Column>
-
-            </Grid.Column>
-          </Grid>
+            <Grid.Column></Grid.Column>
+          </Grid.Row>
+        </Grid>
       }
     </div>
   );
