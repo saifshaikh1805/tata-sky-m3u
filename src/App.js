@@ -118,10 +118,9 @@ function App() {
           localStorage.setItem("token", token);
           setError("");
         }
-        else {
+        else
           setError(res.message);
-          setLoading(false);
-        }
+        setLoading(false);
       })
       .catch(error => {
         console.log('error', error);
@@ -306,7 +305,7 @@ function App() {
   return (
     <div>
       {
-        <Grid columns='equal' padded>
+        <Grid columns='equal' padded centered>
           {
             token === "" || theUser === null ?
               <Grid.Row>
