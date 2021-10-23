@@ -4,7 +4,6 @@ import { Button, Form, Grid, Header, Message, Segment } from 'semantic-ui-react'
 import { useEffect, useState } from 'react';
 
 function App() {
-  // debugger;
   const [rmn, setRmn] = useState("");
   const [sid, setSid] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -15,9 +14,7 @@ function App() {
   const [err, setError] = useState("");
   const [dynamicUrl, setDynamicUrl] = useState("");
 
-  // var corsUrl = process.env.REACT_APP_CORSANYWHERE;
-  // if (corsUrl === "" || corsUrl === undefined)
-  //   corsUrl = "https://cors.bridged.cc/";
+
 
   useEffect(() => {
     let tok = localStorage.getItem("token");
@@ -123,7 +120,7 @@ function App() {
     };
 
     let res = {};
-// debugger
+
     fetch("https://thingproxy.freeboard.io/fetch/" + "https://kong-tatasky.videoready.tv/rest-api/pub/api/v2/login/ott", requestOptions)
       .then(response => response.text())
       .then(result => {
