@@ -10,7 +10,7 @@ A react web app to generate an m3u playlist for the channels subscribed on Tata 
 4) Create .env file in root directory
 5) Add the following line in the .env file:
   ```
-  REACT_APP_M3U_FUNCTION_BASE_URL = <THE DOMAIN YOU COPIED IN STEP 2>
+  REACT_APP_M3U_FUNCTION_BASE_URL = <THE DOMAIN YOU COPIED IN STEP 2. Put it in double quotes>
   ```
 7) npm install
 8) npm start
