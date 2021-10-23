@@ -27,7 +27,7 @@ function App() {
 
   useEffect(() => {
     if (theUser !== null) {
-      if (theUser.acStatus !== "DEACTIVATED" || true) {
+      if (theUser.acStatus !== "DEACTIVATED") {
         var myHeaders = new Headers();
         myHeaders.append("Authorization", "Bearer 53d037668d748648c12097863c2321ea61be9de0");
         myHeaders.append("Content-Type", "application/json");
@@ -53,7 +53,7 @@ function App() {
           .catch(error => console.log('error', error));
       }
       else
-        console.log('https://tata-sky-m3u-dynamic.vercel.app/api/getM3u?sid=' + theUser.sid + '_' + theUser.acStatus[0] + '&sname=' + theUser.sName + '&tkn=' + token + '&ent=' + theUser.entitlements.map(x => x.pkgId).join('_'));
+        console.log(process.env.REACT_APP_M3U_FUNCTION_BASE_URL + '/api/getM3u?sid=' + theUser.sid + '_' + theUser.acStatus[0] + '&sname=' + theUser.sName + '&tkn=' + token + '&ent=' + theUser.entitlements.map(x => x.pkgId).join('_'));
     }
     else
       setDynamicUrl("");
@@ -198,7 +198,7 @@ function App() {
                   <Segment loading={loading}>
                     <Header as="h1">Welcome, {theUser.sName}</Header>
                     {
-                      theUser !== null ?
+                      theUser !== null && theUser.acStatus !== "DEACTIVATED" ?
                         <Message>
                           <Message.Header>Dynamic URL to get m3u: </Message.Header>
                           {/* <Image centered src={'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' + encodeURIComponent(m3uMeta.url)} size='small' /> */}
