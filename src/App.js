@@ -1,9 +1,7 @@
 //import logo from './logo.svg';
 import './App.css';
-import { Button, Form, Grid, Header, Image, Message, Segment } from 'semantic-ui-react';
+import { Button, Form, Grid, Header, Message, Segment } from 'semantic-ui-react';
 import { useEffect, useState } from 'react';
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { fireStorage } from './firebaseConfig';
 
 function App() {
   // debugger;
@@ -13,34 +11,56 @@ function App() {
   const [otp, setOtp] = useState("");
   const [theUser, setUser] = useState(null);
   const [token, setToken] = useState("");
-  const [m3uMeta, setM3uMeta] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [firebaseValid, setFirebaseValid] = useState(false);
   const [err, setError] = useState("");
+  const [dynamicUrl, setDynamicUrl] = useState("");
 
-  var corsUrl = process.env.REACT_APP_CORSANYWHERE;
-  if (corsUrl === "" || corsUrl === undefined)
-    corsUrl = "https://cors.bridged.cc/";
+  // var corsUrl = process.env.REACT_APP_CORSANYWHERE;
+  // if (corsUrl === "" || corsUrl === undefined)
+  //   corsUrl = "https://cors.bridged.cc/";
 
   useEffect(() => {
-    if (fireStorage.app.options.projectId !== undefined)
-      setFirebaseValid(true);
-    else
-      setFirebaseValid(false);
     let tok = localStorage.getItem("token");
     let userd = localStorage.getItem("userDetails");
     if (tok !== undefined && userd !== undefined) {
       setToken(tok);
       setUser(JSON.parse(userd));
     }
-    let localm3uMeta = localStorage.getItem("m3uMeta");
-    if (localm3uMeta !== undefined)
-      setM3uMeta(JSON.parse(localm3uMeta));
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("m3uMeta", JSON.stringify(m3uMeta));
-  }, [m3uMeta]);
+    if (theUser !== null) {
+      if (theUser.acStatus !== "DEACTIVATED" || true) {
+        var myHeaders = new Headers();
+        myHeaders.append("Authorization", "Bearer 53d037668d748648c12097863c2321ea61be9de0");
+        myHeaders.append("Content-Type", "application/json");
+        console.log('mko');
+        console.log(process.env.REACT_APP_M3U_FUNCTION_BASE_URL);
+        var raw = JSON.stringify({
+          "long_url": process.env.REACT_APP_M3U_FUNCTION_BASE_URL + '/api/getM3u?sid=' + theUser.sid + '_' + theUser.acStatus[0] + '&sname=' + theUser.sName + '&tkn=' + token + '&ent=' + theUser.entitlements.map(x => x.pkgId).join('_')
+        });
+
+        var requestOptions = {
+          method: 'POST',
+          headers: myHeaders,
+          body: raw,
+          redirect: 'follow'
+        };
+
+        fetch("https://api-ssl.bitly.com/v4/shorten", requestOptions)
+          .then(response => response.text())
+          .then(result => {
+            console.log(result);
+            setDynamicUrl(JSON.parse(result).link);
+          })
+          .catch(error => console.log('error', error));
+      }
+      else
+        console.log('https://tata-sky-m3u-dynamic.vercel.app/api/getM3u?sid=' + theUser.sid + '_' + theUser.acStatus[0] + '&sname=' + theUser.sName + '&tkn=' + token + '&ent=' + theUser.entitlements.map(x => x.pkgId).join('_'));
+    }
+    else
+      setDynamicUrl("");
+  }, [theUser, token])
 
   const getOTP = () => {
     setLoading(true);
@@ -50,7 +70,7 @@ function App() {
 
     let res = {};
 
-    fetch(corsUrl + "https://kong-tatasky.videoready.tv/rest-api/pub/api/v1/rmn/" + rmn + "/otp", requestOptions)
+    fetch("https://kong-tatasky.videoready.tv/rest-api/pub/api/v1/rmn/" + rmn + "/otp", requestOptions)
       .then(response => response.text())
       .then(result => {
         res = JSON.parse(result);
@@ -103,8 +123,8 @@ function App() {
     };
 
     let res = {};
-
-    fetch(corsUrl + "https://kong-tatasky.videoready.tv/rest-api/pub/api/v2/login/ott", requestOptions)
+// debugger
+    fetch("https://thingproxy.freeboard.io/fetch/" + "https://kong-tatasky.videoready.tv/rest-api/pub/api/v2/login/ott", requestOptions)
       .then(response => response.text())
       .then(result => {
         res = JSON.parse(result);
@@ -129,167 +149,9 @@ function App() {
       });
   }
 
-  const getAllChans = async () => {
-    var requestOptions = {
-      method: 'GET'
-    };
+  
 
-    let err = null;
-    let res = null;
-
-    await fetch(corsUrl + "https://ts-api.videoready.tv/content-detail/pub/api/v1/channels?limit=534", requestOptions)
-      .then(response => response.text())
-      .then(result => res = JSON.parse(result))
-      .then(r => r)
-      .catch(error => console.log('error', error));
-
-    let obj = { err };
-    if (err === null)
-      obj.list = res.data.list;
-    return obj;
-  }
-
-  const getJWT = async (params) => {
-    var myHeaders = new Headers();
-    myHeaders.append("Authorization", "bearer " + token);
-    myHeaders.append("x-subscriber-id", theUser.sid);
-    myHeaders.append("x-app-id", "ott-app");
-    myHeaders.append("x-app-key", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6ImR2ci11aSIsImtleSI6IiJ9.XUQUYRo82fD_6yZ9ZEWcJkc0Os1IKbpzynLzSRtQJ-E");
-    myHeaders.append("x-subscriber-name", theUser.sName);
-    myHeaders.append("x-api-key", "YVJNVFZWVlZ7S01UZmRZTWNNQ3lHe0RvS0VYS0NHSwA");
-    myHeaders.append("x-device-platform", "MOBILE");
-    myHeaders.append("x-device-type", "ANDROID");
-    myHeaders.append("Content-Type", "application/json");
-
-    var raw = JSON.stringify(params);
-
-    var requestOptions = {
-      method: 'POST',
-      headers: myHeaders,
-      body: raw
-    };
-
-    let err = null;
-    let res = null;
-
-    await fetch(corsUrl + "https://kong-tatasky.videoready.tv/auth-service/v1/oauth/token-service/token", requestOptions)
-      .then(response => response.text())
-      .then(result => res = JSON.parse(result))
-      .catch(error => err = error);
-
-    let obj = { err };
-    if (err === null)
-      obj.token = res.data.token;
-    return obj;
-  }
-
-  const getUserChanDetails = async (userChannels) => {
-    var requestOptions = {
-      method: 'GET'
-    };
-
-    let err = null;
-    let res = null;
-
-    await Promise.all(
-      userChannels.map(x =>
-        fetch(corsUrl + "https://kong-tatasky.videoready.tv/content-detail/pub/api/v1/channels/" + x.id, requestOptions)
-          .then(r => r.json())
-          .catch(error => err = error)
-      )
-    ).then(response => Promise.resolve(response))
-      .then(result => res = result.filter(c => c.data.meta.length > 0).map(cd => cd.data))
-      .catch(error => err = error);
-
-    let obj = { err };
-    if (err === null)
-      obj.list = res;
-    return obj;
-  }
-
-  const generateM3u = async (reqType) => {
-    // debugger;
-    setLoading(true);
-    let errs = [];
-    let userEnt = theUser.entitlements.map(x => x.pkgId);
-    let userChans = [];
-    let allChans = await getAllChans();
-    if (allChans.err === null) {
-      userChans = allChans.list.filter(x => x.entitlements.some(y => userEnt.includes(y)));
-      console.log(userChans);
-    }
-    else
-      errs.push(allChans.err);
-    if (errs.length === 0) {
-      let paramsForJwt = { action: "stream" };
-      paramsForJwt.epids = userEnt.map(x => { return { epid: "Subscription", bid: x } });
-      let jwt = await getJWT(paramsForJwt);
-      if (jwt.err === null) {
-        console.log(jwt);
-        localStorage.setItem("jwt", jwt.token);
-      }
-      else
-        errs.push(jwt.err);
-    }
-    if (errs.length === 0) {
-      let userChanDetails = await getUserChanDetails(userChans);
-      let chansList = userChanDetails.list;
-      console.log(chansList);
-      let m3uStr = '#EXTM3U    x-tvg-url="http://botallen.live/epg.xml.gz"\n\n';
-      for (let i = 0; i < chansList.length; i++) {
-        m3uStr += '#EXTINF:-1  tvg-id=' + chansList[i].meta[0].channelId.toString() + '  ';
-        m3uStr += 'tvg-logo=' + chansList[i].meta[0].channelLogo + '   ';
-        m3uStr += 'group-title=' + chansList[i].meta[0].primaryGenre + ',   ' + chansList[i].meta[0].channelName + '\n';
-        m3uStr += '#KODIPROP:inputstream.adaptive.license_type=com.widevine.alpha' + '\n';
-        m3uStr += '#KODIPROP:inputstream.adaptive.license_key=' + chansList[i].detail.dashWidewineLicenseUrl + '&ls_session=';
-        m3uStr += localStorage.getItem("jwt") + '\n';
-        m3uStr += chansList[i].detail.dashWidewinePlayUrl + '\n\n';
-      }
-
-      if (reqType === "file") {
-        // download m3u file
-        let fileA = document.createElement('a');
-        let blob = new Blob([m3uStr]);
-        fileA.href = URL.createObjectURL(blob);
-        fileA.download = theUser.sid + '.m3u';
-        fileA.click();
-        setLoading(false);
-      }
-      else {
-        //store m3u on firebase storage and get download URL
-        let newM3uMeta = null;
-        let blobObj = new Blob([m3uStr]);
-        const storageRef = ref(fireStorage, theUser.sid + ".m3u");
-        uploadBytes(storageRef, blobObj)
-          .then(snapshot => {
-            // debugger;
-            console.log('Uploaded test file!');
-            newM3uMeta = { updated: snapshot.metadata.updated };
-            return snapshot.ref
-          })
-          .then(r => getDownloadURL(r).then(d => {
-            newM3uMeta.url = d;
-            setM3uMeta(newM3uMeta);
-            setLoading(false);
-          }))
-      }
-    }
-  }
-
-  const testUpload = () => {
-    //debugger;
-    let blobObj = new Blob(["testing 1"]);
-    const storageRef = ref(fireStorage, "test.txt");
-    uploadBytes(storageRef, blobObj)
-      .then(snapshot => {
-        //  debugger;
-        console.log('Uploaded test file!');
-        setM3uMeta({ updated: snapshot.metadata.updated });
-        return snapshot.ref
-      })
-      .then(r => getDownloadURL(r).then(d => setM3uMeta({ ...m3uMeta, url: d })))
-  }
-
+  
   const logout = () => {
     localStorage.clear();
     setRmn("");
@@ -298,7 +160,6 @@ function App() {
     setOtp("");
     setUser(null);
     setToken("");
-    setM3uMeta(null);
     setLoading(false);
   }
 
@@ -340,22 +201,25 @@ function App() {
                   <Segment loading={loading}>
                     <Header as="h1">Welcome, {theUser.sName}</Header>
                     {
-                      firebaseValid ?
-                        <Button primary onClick={(rt) => generateM3u('url')}>Generate m3u URL</Button>
-                        : <></>
-                    }
-                    <Button primary onClick={(rt) => generateM3u('file')}>Download m3u file</Button>
-                    <Button negative onClick={logout}>Logout</Button>
-                    {
-                      m3uMeta !== null ?
-                        <Message >
-                          <Message.Header>Last generated on {new Date(m3uMeta.updated).toLocaleString()}</Message.Header>
-                          <Image centered src={'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' + encodeURIComponent(m3uMeta.url)} size='small' />
+                      theUser !== null ?
+                        <Message>
+                          <Message.Header>Dynamic URL to get m3u: </Message.Header>
+                          {/* <Image centered src={'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' + encodeURIComponent(m3uMeta.url)} size='small' /> */}
                           <p>
-                            <a href={m3uMeta.url}>{m3uMeta.url}</a>
+                            <a href={dynamicUrl}>{dynamicUrl}</a>
                           </p>
-                        </Message> : <></>
+                          <p>
+                            You can use the above m3u URL in OTT Navigator or Tivimate app to watch all your subscribed channels.
+                          </p>
+                          <p>
+                          The generated m3u URL is for permanent use and is not required to be refreshed every 24 hours. Enjoy!
+                          </p>
+                        </Message>
+                        :
+                        <Header as='h3' style={{ color: 'red' }}>Your Tata Sky Connection is deactivated.</Header>
                     }
+                    
+                    <Button negative onClick={logout}>Logout</Button>
                   </Segment>
                 </Grid.Column>
                 <Grid.Column></Grid.Column>
