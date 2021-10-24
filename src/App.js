@@ -1,6 +1,6 @@
 //import logo from './logo.svg';
 import './App.css';
-import { Button, Form, Grid, Header, Message, Segment } from 'semantic-ui-react';
+import { Button, Form, Grid, Header, Message, Radio, Segment } from 'semantic-ui-react';
 import { useEffect, useState } from 'react';
 
 function App() {
@@ -13,7 +13,8 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [err, setError] = useState("");
   const [dynamicUrl, setDynamicUrl] = useState("");
-
+  const [loginType, setLoginType] = useState("OTP");
+  const [pwd, setPwd] = useState("");
 
 
   useEffect(() => {
@@ -106,12 +107,22 @@ function App() {
     myHeaders.append("referer", "https://watch.tatasky.com/");
     myHeaders.append("accept-language", "en-GB,en;q=0.9");
 
-    var raw = JSON.stringify({
-      "rmn": rmn,
-      "sid": sid,
-      "authorization": otp,
-      "loginOption": "OTP"
-    });
+    // var raw = JSON.stringify({
+    //   "rmn": rmn,
+    //   "sid": sid,
+    //   "authorization": otp,
+    //   "loginOption": "OTP"
+    // });
+
+    var raw = {
+      sid,
+      authorization: loginType === 'OTP' ? otp : pwd,
+      loginOption: loginType
+    };
+    if(loginType === 'OTP')
+      raw.rmn = rmn;
+
+    raw = JSON.stringify(raw);
 
     var requestOptions = {
       method: 'POST',
@@ -146,15 +157,16 @@ function App() {
       });
   }
 
-  
 
-  
+
+
   const logout = () => {
     localStorage.clear();
     setRmn("");
     setSid("");
     setOtpSent(false);
     setOtp("");
+    setPwd("");
     setUser(null);
     setToken("");
     setLoading(false);
@@ -171,22 +183,62 @@ function App() {
                 <Grid.Column computer={8} tablet={12} mobile={16}>
                   <Segment loading={loading}>
                     <Form>
-                      <Form.Field disabled={otpSent}>
-                        <label>RMN</label>
-                        <input value={rmn} placeholder='Registered Mobile Number' onChange={(e) => setRmn(e.currentTarget.value)} />
-                      </Form.Field>
-                      <Form.Field disabled={otpSent}>
-                        <label>Subscriber ID</label>
-                        <input value={sid} placeholder='Subscriber ID' onChange={(e) => setSid(e.currentTarget.value)} />
-                      </Form.Field>
-                      <Form.Field disabled={!otpSent}>
-                        <label>OTP</label>
-                        <input value={otp} placeholder='OTP' onChange={(e) => setOtp(e.currentTarget.value)} />
-                      </Form.Field>
+                      <Form.Group inline>
+                        <label>Login via </label>
+                        <Form.Field>
+                          <Radio
+                            label='OTP'
+                            name='loginTypeRadio'
+                            value='OTP'
+                            checked={loginType === 'OTP'}
+                            onChange={(e, { value }) => { setLoginType(value); }}
+                          />
+                        </Form.Field>
+                        <Form.Field>
+                          <Radio
+                            label='Password'
+                            name='loginTypeRadio'
+                            value='PWD'
+                            checked={loginType === 'PWD'}
+                            onChange={(e, { value }) => { setLoginType(value); }}
+                          />
+                        </Form.Field>
+                      </Form.Group>
+
                       {
-                        otpSent ? <Button primary onClick={authenticateUser}>Login</Button> :
-                          <Button primary onClick={getOTP}>Get OTP</Button>
+                        loginType === 'OTP' ?
+                          <>
+                            <Form.Field disabled={otpSent}>
+                              <label>RMN</label>
+                              <input value={rmn} placeholder='Registered Mobile Number' onChange={(e) => setRmn(e.currentTarget.value)} />
+                            </Form.Field>
+                            <Form.Field disabled={otpSent}>
+                              <label>Subscriber ID</label>
+                              <input value={sid} placeholder='Subscriber ID' onChange={(e) => setSid(e.currentTarget.value)} />
+                            </Form.Field>
+                            <Form.Field disabled={!otpSent}>
+                              <label>OTP</label>
+                              <input value={otp} placeholder='OTP' onChange={(e) => setOtp(e.currentTarget.value)} />
+                            </Form.Field>
+                            {
+                              otpSent ? <Button primary onClick={authenticateUser}>Login</Button> :
+                                <Button primary onClick={getOTP}>Get OTP</Button>
+                            }
+                          </>
+                          :
+                          <>
+                            <Form.Field>
+                              <label>Subscriber ID</label>
+                              <input value={sid} placeholder='Subscriber ID' onChange={(e) => setSid(e.currentTarget.value)} />
+                            </Form.Field>
+                            <Form.Field>
+                              <label>Password</label>
+                              <input type='password' value={pwd} placeholder='Password' onChange={(e) => setPwd(e.currentTarget.value)} />
+                            </Form.Field>
+                            <Button primary onClick={authenticateUser}>Login</Button>
+                          </>
                       }
+
                     </Form>
                   </Segment>
                 </Grid.Column>
@@ -209,13 +261,13 @@ function App() {
                             You can use the above m3u URL in OTT Navigator or Tivimate app to watch all your subscribed channels.
                           </p>
                           <p>
-                          The generated m3u URL is for permanent use and is not required to be refreshed every 24 hours. Enjoy!
+                            The generated m3u URL is for permanent use and is not required to be refreshed every 24 hours. Enjoy!
                           </p>
                         </Message>
                         :
                         <Header as='h3' style={{ color: 'red' }}>Your Tata Sky Connection is deactivated.</Header>
                     }
-                    
+
                     <Button negative onClick={logout}>Logout</Button>
                   </Segment>
                 </Grid.Column>
