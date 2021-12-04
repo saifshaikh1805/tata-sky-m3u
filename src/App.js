@@ -68,7 +68,7 @@ function App() {
 
     let res = {};
 
-    fetch("https://kong-tatasky.videoready.tv/rest-api/pub/api/v1/rmn/" + rmn + "/otp", requestOptions)
+    fetch("https://cors-pub.herokuapp.com/" + "https://kong-tatasky.videoready.tv/rest-api/pub/api/v1/rmn/" + rmn + "/otp", requestOptions)
       .then(response => response.text())
       .then(result => {
         res = JSON.parse(result);
@@ -132,7 +132,7 @@ function App() {
 
     let res = {};
 
-    fetch("https://thingproxy.freeboard.io/fetch/" + "https://kong-tatasky.videoready.tv/rest-api/pub/api/v2/login/ott", requestOptions)
+    fetch("https://cors-pub.herokuapp.com/" + "https://kong-tatasky.videoready.tv/rest-api/pub/api/v2/login/ott", requestOptions)
       .then(response => response.text())
       .then(result => {
         res = JSON.parse(result);
