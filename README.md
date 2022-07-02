@@ -11,7 +11,7 @@ You will need an account on Vercel. It's free!
 2) Enjoy!
 ## Run locally (You need a little bit of git and npm knowledge)
 1) Clone this repo.
-2) Open cmd / terminal and type the below commands one by one.
+2) Open cmd / terminal and type the below commands one by one.<br>
 a) npm install
 b) npm run dev
 3) Enjoy!
