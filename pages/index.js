@@ -1,9 +1,12 @@
-//import logo from './logo.svg';
-import './App.css';
+import Head from 'next/head'
+import Image from 'next/image'
+import styles from '../styles/Home.module.css'
+
 import { Button, Form, Grid, Header, Message, Radio, Segment } from 'semantic-ui-react';
 import { useEffect, useState } from 'react';
 
-function App() {
+export default function Home() {
+
   const [rmn, setRmn] = useState("");
   const [sid, setSid] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -35,7 +38,7 @@ function App() {
         console.log('mko');
         console.log(process.env.REACT_APP_M3U_FUNCTION_BASE_URL);
         var raw = JSON.stringify({
-          "long_url": process.env.REACT_APP_M3U_FUNCTION_BASE_URL + '/api/getM3u?sid=' + theUser.sid + '_' + theUser.acStatus[0] + '&sname=' + theUser.sName + '&tkn=' + token + '&ent=' + theUser.entitlements.map(x => x.pkgId).join('_')
+          "long_url": window.location.host + '/api/getM3u?sid=' + theUser.sid + '_' + theUser.acStatus[0] + '&id=' + theUser.id + '&sname=' + theUser.sName + '&tkn=' + token + '&ent=' + theUser.entitlements.map(x => x.pkgId).join('_')
         });
 
         var requestOptions = {
@@ -54,7 +57,7 @@ function App() {
           .catch(error => console.log('error', error));
       }
       else
-        console.log(process.env.REACT_APP_M3U_FUNCTION_BASE_URL + '/api/getM3u?sid=' + theUser.sid + '_' + theUser.acStatus[0] + '&sname=' + theUser.sName + '&tkn=' + token + '&ent=' + theUser.entitlements.map(x => x.pkgId).join('_'));
+        console.log(window.location.host + '/api/getM3u?sid=' + theUser.sid + '_' + theUser.acStatus[0] + '&id=' + theUser.id + '&sname=' + theUser.sName + '&tkn=' + token + '&ent=' + theUser.entitlements.map(x => x.pkgId).join('_'));
     }
     else
       setDynamicUrl("");
@@ -119,7 +122,7 @@ function App() {
       authorization: loginType === 'OTP' ? otp : pwd,
       loginOption: loginType
     };
-    if(loginType === 'OTP')
+    if (loginType === 'OTP')
       raw.rmn = rmn;
 
     raw = JSON.stringify(raw);
@@ -135,10 +138,12 @@ function App() {
     fetch("https://cors-pub.herokuapp.com/" + "https://kong-tatasky.videoready.tv/rest-api/pub/api/v2/login/ott", requestOptions)
       .then(response => response.text())
       .then(result => {
+        // debugger;
         res = JSON.parse(result);
         console.log(res);
         if (res.code === 0) {
           let userDetails = res.data.userDetails;
+          userDetails.id = res.data.userProfile.id;
           let token = res.data.accessToken;
           setUser(userDetails);
           setToken(token);
@@ -296,7 +301,5 @@ function App() {
         </Grid>
       }
     </div>
-  );
+  )
 }
-
-export default App;
