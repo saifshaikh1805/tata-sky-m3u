@@ -1,7 +1,7 @@
 # Tata Sky m3u generator web app
 A react web app to generate an m3u playlist for the channels subscribed on Tata Sky.
 ## Inspiration
-Gaurav's python script (https://github.com/ForceGT/Tata-Sky-IPTV)
+https://github.com/ForceGT/Tata-Sky-IPTV
 ## Update
 Converted to a single repo to make it a one click deploy on vercel as a lot of you non-technical people were facing difficulties while deploying.
 ## Deploy on vercel and access from anywhere (Easy)
@@ -11,8 +11,8 @@ You will need an account on Vercel. It's free!
 2) Enjoy!
 ## Run locally (You need a little bit of git and npm knowledge)
 1) Clone this repo.
-2) Open cmd / terminal and type the below commands one by one.
-a) npm install
+2) Open cmd / terminal and type the below commands one by one.<br>
+a) npm install<br>
 b) npm run dev
 3) Enjoy!
 
