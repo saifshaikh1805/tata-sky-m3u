@@ -65,16 +65,10 @@ export default function Home() {
 
   const getOTP = () => {
     setLoading(true);
-    let requestOptions = {
-      method: 'GET',
-    };
-
-    let res = {};
-
-    fetch("https://cors-pub.herokuapp.com/" + "https://kong-tatasky.videoready.tv/rest-api/pub/api/v1/rmn/" + rmn + "/otp", requestOptions)
+    fetch("/api/getOtp?rmn=" + rmn)
       .then(response => response.text())
       .then(result => {
-        res = JSON.parse(result);
+        const res = JSON.parse(result);
         setLoading(false);
         console.log(res);
         if (res.message.indexOf("OTP generated successfully") === 0) {
@@ -92,54 +86,10 @@ export default function Home() {
 
   const authenticateUser = () => {
     setLoading(true);
-    var myHeaders = new Headers();
-    myHeaders.append("authority", "kong-tatasky.videoready.tv");
-    myHeaders.append("sec-ch-ua", "\"Google Chrome\";v=\"93\", \" Not;A Brand\";v=\"99\", \"Chromium\";v=\"93\"");
-    myHeaders.append("locale", "ENG");
-    myHeaders.append("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36");
-    myHeaders.append("content-type", "application/json");
-    myHeaders.append("device_details", "{\"pl\":\"web\",\"os\":\"Linux\",\"lo\":\"en-us\",\"app\":\"1.35.32\",\"dn\":\"PC\",\"bv\":93,\"bn\":\"CHROME\",\"device_id\":\"1aacfdbadea40d5b350887a4fdd7ed771630761468278\",\"device_type\":\"WEB\",\"device_platform\":\"PC\",\"device_category\":\"open\",\"manufacturer\":\"Linux_CHROME_93\",\"model\":\"PC\",\"sname\":\"\"}");
-    myHeaders.append("sec-ch-ua-mobile", "?0");
-    myHeaders.append("platform", "web");
-    myHeaders.append("sec-ch-ua-platform", "\"Linux\"");
-    myHeaders.append("accept", "*/*");
-    myHeaders.append("origin", "https://watch.tatasky.com");
-    myHeaders.append("sec-fetch-site", "cross-site");
-    myHeaders.append("sec-fetch-mode", "cors");
-    myHeaders.append("sec-fetch-dest", "empty");
-    myHeaders.append("referer", "https://watch.tatasky.com/");
-    myHeaders.append("accept-language", "en-GB,en;q=0.9");
-
-    // var raw = JSON.stringify({
-    //   "rmn": rmn,
-    //   "sid": sid,
-    //   "authorization": otp,
-    //   "loginOption": "OTP"
-    // });
-
-    var raw = {
-      sid,
-      authorization: loginType === 'OTP' ? otp : pwd,
-      loginOption: loginType
-    };
-    if (loginType === 'OTP')
-      raw.rmn = rmn;
-
-    raw = JSON.stringify(raw);
-
-    var requestOptions = {
-      method: 'POST',
-      headers: myHeaders,
-      body: raw
-    };
-
-    let res = {};
-
-    fetch("https://cors-pub.herokuapp.com/" + "https://kong-tatasky.videoready.tv/rest-api/pub/api/v2/login/ott", requestOptions)
+    fetch("/api/getAuthToken?sid=" + sid + "&loginType=" + loginType + "&otp=" + otp + "&pwd=" + pwd + "&rmn=" + rmn)
       .then(response => response.text())
       .then(result => {
-        // debugger;
-        res = JSON.parse(result);
+        const res = JSON.parse(result);
         console.log(res);
         if (res.code === 0) {
           let userDetails = res.data.userDetails;
@@ -161,9 +111,6 @@ export default function Home() {
         setLoading(false);
       });
   }
-
-
-
 
   const logout = () => {
     localStorage.clear();
