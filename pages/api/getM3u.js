@@ -165,9 +165,9 @@ const generateM3u = async (ud) => {
             if (chansList.length > 0) {
                 m3uStr = '#EXTM3U    x-tvg-url="http://botallen.live/epg.xml.gz"\n\n';
                 for (let i = 0; i < chansList.length; i++) {
-                    m3uStr += '#EXTINF:-1  tvg-id=' + chansList[i].channelMeta.id.toString() + '  ';
-                    m3uStr += 'tvg-logo=' + chansList[i].channelMeta.logo + '   ';
-                    m3uStr += 'group-title=' + chansList[i].channelMeta.genre[0] + ',   ' + chansList[i].channelMeta.channelName + '\n';
+                    m3uStr += '#EXTINF:-1  tvg-id=\"' + chansList[i].channelMeta.id.toString() + '\"  ';
+                    m3uStr += 'tvg-logo=\"' + chansList[i].channelMeta.logo + '\"   ';
+                    m3uStr += 'group-title=\"' + chansList[i].channelMeta.genre[0] + '\",   ' + chansList[i].channelMeta.channelName + '\n';
                     m3uStr += '#KODIPROP:inputstream.adaptive.license_type=com.widevine.alpha' + '\n';
                     m3uStr += '#KODIPROP:inputstream.adaptive.license_key=' + chansList[i].detail.dashWidewineLicenseUrl + '&ls_session=';
                     m3uStr += jwt.token + '\n';
