@@ -31,7 +31,7 @@ const getAllChans = async () => {
     let err = null;
     let res = null;
 
-    await fetch("https://ts-api.videoready.tv/content-detail/pub/api/v1/channels?limit=534", requestOptions)
+    await fetch("https://ts-api.videoready.tv/content-detail/pub/api/v1/channels?limit=599", requestOptions)
         .then(response => response.text())
         .then(result => res = JSON.parse(result))
         .then(r => r)
