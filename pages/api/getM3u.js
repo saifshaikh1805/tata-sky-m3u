@@ -168,20 +168,29 @@ const generateM3u = async (ud) => {
         if (userChanDetails.err === null) {
             let chansList = userChanDetails.list;
             //console.log(chansList);
+            let jwtTokens = [];
             if (chansList.length > 0) {
                 m3uStr = '#EXTM3U    x-tvg-url="http://botallen.live/epg.xml.gz"\n\n';
                 for (let i = 0; i < chansList.length; i++) {
-                    let paramsForJwt = { action: "stream" };
-                    paramsForJwt.epids = chansList[i].detail.entitlements.filter(val => ent.includes(val))
-                                            .map(x => { return { epid: "Subscription", bid: x } });
-                    console.log(paramsForJwt);
-                    let chanJwt = await getJWT(paramsForJwt, ud);
+                    const chanEnts = chansList[i].detail.entitlements.filter(val => ent.includes(val));
+                    let chanJwt = jwtTokens.find(x => x.ents.sort().toString() === chanEnts.sort().toString())?.token;
+                    if (!chanJwt) {
+                        let paramsForJwt = { action: "stream" };
+                        paramsForJwt.epids = chanEnts.map(x => { return { epid: "Subscription", bid: x } });
+                        console.log(paramsForJwt);
+                        chanJwt = await getJWT(paramsForJwt, ud);
+                        chanJwt = chanJwt.token;
+                        jwtTokens.push({
+                            ents: chanEnts,
+                            token: chanJwt
+                        });
+                    }
                     m3uStr += '#EXTINF:-1  tvg-id=\"' + chansList[i].channelMeta.id.toString() + '\"  ';
                     m3uStr += 'tvg-logo=\"' + chansList[i].channelMeta.logo + '\"   ';
                     m3uStr += 'group-title=\"' + chansList[i].channelMeta.genre[0] + '\",   ' + chansList[i].channelMeta.channelName + '\n';
                     m3uStr += '#KODIPROP:inputstream.adaptive.license_type=com.widevine.alpha' + '\n';
                     m3uStr += '#KODIPROP:inputstream.adaptive.license_key=' + chansList[i].detail.dashWidewineLicenseUrl + '&ls_session=';
-                    m3uStr += chanJwt.token + '\n';
+                    m3uStr += chanJwt + '\n';
                     m3uStr += chansList[i].detail.dashWidewinePlayUrl + '\n\n';
                 }
                 console.log('all done!');
