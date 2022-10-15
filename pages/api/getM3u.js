@@ -20,6 +20,7 @@ export default async function handler(req, res) {
 
 
 import fetch, { Headers } from "cross-fetch";
+import starChans from "../../starChans";
 // const baseUrl = "https://kong-tatasky.videoready.tv";
 const baseUrl = "https://tm.tapi.videoready.tv";
 
@@ -141,6 +142,13 @@ const getUserChanDetails = async (userChannels) => {
                 err = error;
             });
     }
+
+    let resultIds = result.map(x => x.channelMeta.id);
+    for (let i = 0; i < starChans.length; i++) {
+        if (!resultIds.find(x => x === starChans[i].channelMeta.id))
+            result.push(starChans[i]);
+    }
+
     if (result.length > 0)
         err = null;
 
@@ -174,25 +182,27 @@ const generateM3u = async (ud) => {
                 m3uStr = '#EXTM3U    x-tvg-url="https://www.tsepg.cf/epg.xml.gz"\n\n';
                 for (let i = 0; i < chansList.length; i++) {
                     const chanEnts = chansList[i].detail.entitlements.filter(val => ent.includes(val));
-                    let chanJwt = jwtTokens.find(x => x.ents.sort().toString() === chanEnts.sort().toString())?.token;
-                    if (!chanJwt) {
-                        let paramsForJwt = { action: "stream" };
-                        paramsForJwt.epids = chanEnts.map(x => { return { epid: "Subscription", bid: x } });
-                        console.log(paramsForJwt);
-                        chanJwt = await getJWT(paramsForJwt, ud);
-                        chanJwt = chanJwt.token;
-                        jwtTokens.push({
-                            ents: chanEnts,
-                            token: chanJwt
-                        });
+                    if (chanEnts.length > 0) {
+                        let chanJwt = jwtTokens.find(x => x.ents.sort().toString() === chanEnts.sort().toString())?.token;
+                        if (!chanJwt) {
+                            let paramsForJwt = { action: "stream" };
+                            paramsForJwt.epids = chanEnts.map(x => { return { epid: "Subscription", bid: x } });
+                            console.log(paramsForJwt);
+                            chanJwt = await getJWT(paramsForJwt, ud);
+                            chanJwt = chanJwt.token;
+                            jwtTokens.push({
+                                ents: chanEnts,
+                                token: chanJwt
+                            });
+                        }
+                        m3uStr += '#EXTINF:-1  tvg-id=\"' + chansList[i].channelMeta.id.toString() + '\"  ';
+                        m3uStr += 'tvg-logo=\"' + chansList[i].channelMeta.logo + '\"   ';
+                        m3uStr += 'group-title=\"' + (chansList[i].channelMeta.genre[0] !== "HD" ? chansList[i].channelMeta.genre[0] : chansList[i].channelMeta.genre[1]) + '\",   ' + chansList[i].channelMeta.channelName + '\n';
+                        m3uStr += '#KODIPROP:inputstream.adaptive.license_type=com.widevine.alpha' + '\n';
+                        m3uStr += '#KODIPROP:inputstream.adaptive.license_key=' + chansList[i].detail.dashWidewineLicenseUrl + '&ls_session=';
+                        m3uStr += chanJwt + '\n';
+                        m3uStr += chansList[i].detail.dashWidewinePlayUrl + '\n\n';
                     }
-                    m3uStr += '#EXTINF:-1  tvg-id=\"' + chansList[i].channelMeta.id.toString() + '\"  ';
-                    m3uStr += 'tvg-logo=\"' + chansList[i].channelMeta.logo + '\"   ';
-                    m3uStr += 'group-title=\"' + chansList[i].channelMeta.genre[0] + '\",   ' + chansList[i].channelMeta.channelName + '\n';
-                    m3uStr += '#KODIPROP:inputstream.adaptive.license_type=com.widevine.alpha' + '\n';
-                    m3uStr += '#KODIPROP:inputstream.adaptive.license_key=' + chansList[i].detail.dashWidewineLicenseUrl + '&ls_session=';
-                    m3uStr += chanJwt + '\n';
-                    m3uStr += chansList[i].detail.dashWidewinePlayUrl + '\n\n';
                 }
                 console.log('all done!');
             }
