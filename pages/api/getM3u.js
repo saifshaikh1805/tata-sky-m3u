@@ -170,7 +170,8 @@ const generateM3u = async (ud) => {
             //console.log(chansList);
             let jwtTokens = [];
             if (chansList.length > 0) {
-                m3uStr = '#EXTM3U    x-tvg-url="http://botallen.live/epg.xml.gz"\n\n';
+                //m3uStr = '#EXTM3U    x-tvg-url="http://botallen.live/epg.xml.gz"\n\n';4
+                m3uStr = '#EXTM3U    x-tvg-url="https://www.tsepg.cf/epg.xml.gz"\n\n';
                 for (let i = 0; i < chansList.length; i++) {
                     const chanEnts = chansList[i].detail.entitlements.filter(val => ent.includes(val));
                     let chanJwt = jwtTokens.find(x => x.ents.sort().toString() === chanEnts.sort().toString())?.token;
