@@ -71,7 +71,7 @@ export default function Home() {
         const res = JSON.parse(result);
         setLoading(false);
         console.log(res);
-        if (res.message.indexOf("OTP") > -1 && res.message.indexOf("successfully") > -1) {
+        if (res.message.toLowerCase().indexOf("otp") > -1 && res.message.toLowerCase().indexOf("successfully") > -1) {
           setOtpSent(true);
           setError("");
         }
