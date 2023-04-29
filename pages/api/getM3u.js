@@ -20,7 +20,6 @@ export default async function handler(req, res) {
 
 
 import fetch, { Headers } from "cross-fetch";
-import starChans from "../../starChans";
 // const baseUrl = "https://kong-tatasky.videoready.tv";
 const baseUrl = "https://tm.tapi.videoready.tv";
 
@@ -141,12 +140,6 @@ const getUserChanDetails = async (userChannels) => {
                 console.log('error: ', error);
                 err = error;
             });
-    }
-
-    let resultIds = result.map(x => x.channelMeta.id);
-    for (let i = 0; i < starChans.length; i++) {
-        if (!resultIds.find(x => x === starChans[i].channelMeta.id))
-            result.push(starChans[i]);
     }
 
     if (result.length > 0)
