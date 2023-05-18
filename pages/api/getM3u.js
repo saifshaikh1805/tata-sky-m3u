@@ -11,67 +11,8 @@ export default async function handler(req, res) {
         tsActive: req.query.sid.split('_')[1] === "D" ? false : true
     };
     if (uData.tsActive) {
-    let errs = [];
-    // let userEnt = theUser.entitlements.map(x => x.pkgId);
-    let ent = uData.ent;
-    let userChans = [];
-    let allChans = await getAllChans();
-    if (allChans.err === null) {
-        userChans = allChans.list.filter(x => x.entitlements.some(y => ent.includes(y)));
-        //console.log(userChans);
-    }
-    else
-        errs.push(allChans.err);
-    if (errs.length === 0) {
-        let userChanDetails = await getUserChanDetails(userChans);
-        let m3uStr = '';
-        if (userChanDetails.err === null) {
-            let chansList = userChanDetails.list;
-            //console.log(chansList);
-            let jwtTokens = [];
-            if (chansList.length > 0) {
-                //m3uStr = '#EXTM3U    x-tvg-url="http://botallen.live/epg.xml.gz"\n\n';4
-                m3uStr = '#EXTM3U    x-tvg-url="https://www.tsepg.cf/epg.xml.gz"\n\n';
-                for (let i = 0; i < chansList.length; i++) {
-                    const chanEnts = chansList[i].detail.entitlements.filter(val => ent.includes(val));
-                    if (chanEnts.length > 0) {
-                        let chanJwt = jwtTokens.find(x => x.ents.sort().toString() === chanEnts.sort().toString())?.token;
-                        if (!chanJwt) {
-                            let paramsForJwt = { action: "stream" };
-                            paramsForJwt.epids = chanEnts.map(x => { return { epid: "Subscription", bid: x } });
-                            console.log(paramsForJwt);
-                            chanJwt = await getJWT(paramsForJwt, uData);
-                            chanJwt = chanJwt.token;
-                            jwtTokens.push({
-                                ents: chanEnts,
-                                token: chanJwt
-                            });
-                        }
-                        m3uStr += '#EXTINF:-1  tvg-id=\"' + chansList[i].channelMeta.id.toString() + '\"  ';
-                        m3uStr += 'tvg-logo=\"' + chansList[i].channelMeta.logo + '\"   ';
-                        m3uStr += 'group-title=\"' + (chansList[i].channelMeta.genre[0] !== "HD" ? chansList[i].channelMeta.genre[0] : chansList[i].channelMeta.genre[1]) + '\",   ' + chansList[i].channelMeta.channelName + '\n';
-                        m3uStr += '#KODIPROP:inputstream.adaptive.license_type=com.widevine.alpha' + '\n';
-                        m3uStr += '#KODIPROP:inputstream.adaptive.license_key=' + chansList[i].detail.dashWidewineLicenseUrl + '&ls_session=';
-                        m3uStr += chanJwt + '\n';
-                        m3uStr += chansList[i].detail.dashWidewinePlayUrl + '\n\n';
-
-                        res.write(m3uStr);
-                    }
-                }
-                console.log('all done!');
-            }
-            else {
-                m3uStr = {error: "Could not get channels. Try again later."};
-                res.write(m3uStr);
-            }
-        }
-        else
-            m3uStr = {error:userChanDetails.err.toString()}
-    }
-        
-
-        // res.status(200).send(m3uString);
-        res.status(200).end();
+        let m3uString = await generateM3u(uData);
+        res.status(200).send(m3uString);
     }
     else
         res.status(409).json({ error: "Tata Sky Deactivated" });
@@ -210,6 +151,59 @@ const getUserChanDetails = async (userChannels) => {
     return obj;
 }
 
-// const generateM3u = async (ud) => {
-    
-// }
+const generateM3u = async (ud) => {
+    let errs = [];
+    // let userEnt = theUser.entitlements.map(x => x.pkgId);
+    let ent = ud.ent;
+    let userChans = [];
+    let allChans = await getAllChans();
+    if (allChans.err === null) {
+        userChans = allChans.list.filter(x => x.entitlements.some(y => ent.includes(y)));
+        //console.log(userChans);
+    }
+    else
+        errs.push(allChans.err);
+    if (errs.length === 0) {
+        let userChanDetails = await getUserChanDetails(userChans);
+        let m3uStr = '';
+        if (userChanDetails.err === null) {
+            let chansList = userChanDetails.list;
+            //console.log(chansList);
+            let jwtTokens = [];
+            if (chansList.length > 0) {
+                //m3uStr = '#EXTM3U    x-tvg-url="http://botallen.live/epg.xml.gz"\n\n';4
+                m3uStr = '#EXTM3U    x-tvg-url="https://www.tsepg.cf/epg.xml.gz"\n\n';
+                for (let i = 0; i < chansList.length; i++) {
+                    const chanEnts = chansList[i].detail.entitlements.filter(val => ent.includes(val));
+                    if (chanEnts.length > 0) {
+                        let chanJwt = jwtTokens.find(x => x.ents.sort().toString() === chanEnts.sort().toString())?.token;
+                        if (!chanJwt) {
+                            let paramsForJwt = { action: "stream" };
+                            paramsForJwt.epids = chanEnts.map(x => { return { epid: "Subscription", bid: x } });
+                            console.log(paramsForJwt);
+                            chanJwt = await getJWT(paramsForJwt, ud);
+                            chanJwt = chanJwt.token;
+                            jwtTokens.push({
+                                ents: chanEnts,
+                                token: chanJwt
+                            });
+                        }
+                        m3uStr += '#EXTINF:-1  tvg-id=\"' + chansList[i].channelMeta.id.toString() + '\"  ';
+                        m3uStr += 'tvg-logo=\"' + chansList[i].channelMeta.logo + '\"   ';
+                        m3uStr += 'group-title=\"' + (chansList[i].channelMeta.genre[0] !== "HD" ? chansList[i].channelMeta.genre[0] : chansList[i].channelMeta.genre[1]) + '\",   ' + chansList[i].channelMeta.channelName + '\n';
+                        m3uStr += '#KODIPROP:inputstream.adaptive.license_type=com.widevine.alpha' + '\n';
+                        m3uStr += '#KODIPROP:inputstream.adaptive.license_key=' + chansList[i].detail.dashWidewineLicenseUrl + '&ls_session=';
+                        m3uStr += chanJwt + '\n';
+                        m3uStr += chansList[i].detail.dashWidewinePlayUrl + '\n\n';
+                    }
+                }
+                console.log('all done!');
+            }
+            else
+                m3uStr = "Could not get channels. Try again later.";
+        }
+        else
+            m3uStr = userChanDetails.err.toString();
+        return m3uStr;
+    }
+}
