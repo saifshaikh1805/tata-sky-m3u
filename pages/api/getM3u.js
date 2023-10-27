@@ -112,7 +112,7 @@ const getUserChanDetails = async (userChannels) => {
     myHeaders.append("device_details", "{\"pl\":\"web\",\"os\":\"Linux\",\"lo\":\"en-us\",\"app\":\"1.36.35\",\"dn\":\"PC\",\"bv\":101,\"bn\":\"CHROME\",\"device_id\":\"b70f9d50a3ea9cc7b77d4f1e04c41706\",\"device_type\":\"WEB\",\"device_platform\":\"PC\",\"device_category\":\"open\",\"manufacturer\":\"Linux_CHROME_101\",\"model\":\"PC\",\"sname\":\"\"}");
     myHeaders.append("locale", "ENG");
     myHeaders.append("origin", "https://watch.tataplay.com");
-    myHeaders.append("platform", "web");
+    // myHeaders.append("platform", "web");
     myHeaders.append("referer", "https://watch.tataplay.com/");
     myHeaders.append("sec-fetch-dest", "empty");
     myHeaders.append("sec-fetch-mode", "cors");
