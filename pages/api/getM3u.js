@@ -20,6 +20,7 @@ export default async function handler(req, res) {
 
 
 import fetch, { Headers } from "cross-fetch";
+import { replacestrings } from './stringreplace';
 // const baseUrl = "https://kong-tatasky.videoready.tv";
 const baseUrl = "https://tm.tapi.videoready.tv";
 
@@ -194,7 +195,11 @@ const generateM3u = async (ud) => {
                         m3uStr += '#KODIPROP:inputstream.adaptive.license_type=com.widevine.alpha' + '\n';
                         m3uStr += '#KODIPROP:inputstream.adaptive.license_key=' + chansList[i].detail.dashWidewineLicenseUrl + '&ls_session=';
                         m3uStr += chanJwt + '\n';
-                        m3uStr += chansList[i].detail.dashWidewinePlayUrl + '\n\n';
+                        //m3uStr += chansList[i].detail.dashWidewinePlayUrl + '\n\n';
+                        // Use the replacestrings function
+                        const playUrl = replacestrings(chansList[i].detail.dashWidewinePlayUrl);
+                        m3uStr += playUrl + '\n\n';
+
                     }
                 }
                 console.log('all done!');
