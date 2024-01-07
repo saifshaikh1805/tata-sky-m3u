@@ -4,7 +4,7 @@ const replacements = {
     // Add more replacements as needed
 };
 
-export const replaceStrings = (inputString) => {
+export const replacestrings = (inputString) => {
     for (const [search, replace] of Object.entries(replacements)) {
         inputString = inputString.replace(new RegExp(search, 'g'), replace);
     }
