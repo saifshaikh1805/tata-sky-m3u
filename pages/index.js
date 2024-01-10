@@ -58,25 +58,29 @@ export default function Home() {
         //   .catch(error => console.log('error', error));
 
         if (window.location.origin.indexOf('localhost') === -1) {
-          fetch("/api/shortenUrl", { method: 'POST', body: JSON.stringify({ longUrl: window.location.origin + '/api/getM3u?sid=' + theUser.sid + '_' + theUser.acStatus[0] + '&id=' + theUser.id + '&sname=' + theUser.sName + '&tkn=' + token + '&ent=' + theUser.entitlements.map(x => x.pkgId).join('_') }) })
-            .then(response => response.json())
-            .then(result => {
-              console.log(result);
-              const mydiv = document.createElement('div');
-              mydiv.innerHTML = result.data;
-              setDynamicUrl(mydiv.querySelector('#shortenurl').value);
-            })
-            .catch(error => console.log('error', error));
-        }
-        else
-          setDynamicUrl('');
-      }
-      else
+        const apiUrl = '/api/getM3u';
+        const queryParams = new URLSearchParams({
+          sid: `${theUser.sid}_${theUser.acStatus[0]}`,
+          id: theUser.id,
+          sname: theUser.sName,
+          tkn: token,
+          ent: theUser.entitlements.map(x => x.pkgId).join('_'),
+        });
+
+        const longUrl = `${window.location.origin}${apiUrl}?${queryParams.toString()}`;
+
+        setDynamicUrl(longUrl);
+      } else {
+        setDynamicUrl('');
         console.log(window.location.origin.replace('localhost', '127.0.0.1') + '/api/getM3u?sid=' + theUser.sid + '_' + theUser.acStatus[0] + '&id=' + theUser.id + '&sname=' + theUser.sName + '&tkn=' + token + '&ent=' + theUser.entitlements.map(x => x.pkgId).join('_'));
-    }
-    else
+      }
+    } else {
       setDynamicUrl("");
-  }, [theUser, token])
+    }
+  }
+}, [theUser, token]);
+
+
 
   const getOTP = () => {
     setLoading(true);
@@ -190,31 +194,6 @@ export default function Home() {
                   <Segment loading={loading}>
                     <Header as={'h1'}>Generate Tata Play IPTV (m3u) playlist</Header>
                     <Form>
-                      <Form.Group inline>
-                        <label>Login via </label>
-                        <Form.Field>
-                          <Radio
-                            label='OTP'
-                            name='loginTypeRadio'
-                            value='OTP'
-                            checked={loginType === 'OTP'}
-                            onChange={(e, { value }) => { setLoginType(value); }}
-                          />
-                        </Form.Field>
-                        <Form.Field>
-                          <Radio
-                            label='Password'
-                            name='loginTypeRadio'
-                            value='PWD'
-                            checked={loginType === 'PWD'}
-                            onChange={(e, { value }) => { setLoginType(value); }}
-                          />
-                        </Form.Field>
-                      </Form.Group>
-
-                      {
-                        loginType === 'OTP' ?
-                          <>
                             <Form.Field disabled={otpSent}>
                               <label>RMN</label>
                               <input value={rmn} placeholder='Registered Mobile Number' onChange={(e) => setRmn(e.currentTarget.value)} />
@@ -231,21 +210,6 @@ export default function Home() {
                               otpSent ? <Button primary onClick={authenticateUser}>Login</Button> :
                                 <Button primary onClick={getOTP}>Get OTP</Button>
                             }
-                          </>
-                          :
-                          <>
-                            <Form.Field>
-                              <label>Subscriber ID</label>
-                              <input value={sid} placeholder='Subscriber ID' onChange={(e) => setSid(e.currentTarget.value)} />
-                            </Form.Field>
-                            <Form.Field>
-                              <label>Password</label>
-                              <input type='password' value={pwd} placeholder='Password' onChange={(e) => setPwd(e.currentTarget.value)} />
-                            </Form.Field>
-                            <Button primary onClick={authenticateUser}>Login</Button>
-                          </>
-                      }
-
                     </Form>
                   </Segment>
                 </Grid.Column>
@@ -263,7 +227,9 @@ export default function Home() {
                             <Message.Header>Dynamic URL to get m3u: </Message.Header>
                             {/* <Image centered src={'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' + encodeURIComponent(m3uMeta.url)} size='small' /> */}
                             <p>
+                            <div style={{ wordBreak: 'break-all' }}>
                               <a href={dynamicUrl}>{dynamicUrl}</a>
+                            </div>
                             </p>
                             <p>
                               You can use the above m3u URL in OTT Navigator or Tivimate app to watch all your subscribed channels.
