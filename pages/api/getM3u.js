@@ -21,7 +21,6 @@ export default async function handler(req, res) {
 
 import fetch, { Headers } from "cross-fetch";
 import { replacestrings } from './stringreplace';
-const { filterChannels } = require('./channelfilter');
 // const baseUrl = "https://kong-tatasky.videoready.tv";
 const baseUrl = "https://tm.tapi.videoready.tv";
 
@@ -33,7 +32,7 @@ const getAllChans = async () => {
     let err = null;
     let res = null;
 
-    await fetch("https://ts-api.videoready.tv/content-detail/pub/api/v1/channels?limit=999", requestOptions)
+    await fetch("https://ts-api.videoready.tv/content-detail/pub/api/v1/channels?limit=599", requestOptions)
         .then(response => response.text())
         .then(result => res = JSON.parse(result))
         .then(r => r)
@@ -58,7 +57,7 @@ const getJWT = async (params, uDetails) => {
         'kp': 'false',
         'locale': 'ENG',
         'origin': 'https://watch.tataplay.com',
-        'platform': 'mobile',
+        'platform': 'web',
         'profileid': uDetails.id,
         'referer': 'https://watch.tataplay.com/',
         'sec-fetch-dest': 'empty',
@@ -114,7 +113,7 @@ const getUserChanDetails = async (userChannels) => {
     myHeaders.append("device_details", "{\"pl\":\"web\",\"os\":\"Linux\",\"lo\":\"en-us\",\"app\":\"1.36.35\",\"dn\":\"PC\",\"bv\":101,\"bn\":\"CHROME\",\"device_id\":\"b70f9d50a3ea9cc7b77d4f1e04c41706\",\"device_type\":\"WEB\",\"device_platform\":\"PC\",\"device_category\":\"open\",\"manufacturer\":\"Linux_CHROME_101\",\"model\":\"PC\",\"sname\":\"\"}");
     myHeaders.append("locale", "ENG");
     myHeaders.append("origin", "https://watch.tataplay.com");
-    myHeaders.append("platform", "mobile");
+    // myHeaders.append("platform", "web");
     myHeaders.append("referer", "https://watch.tataplay.com/");
     myHeaders.append("sec-fetch-dest", "empty");
     myHeaders.append("sec-fetch-mode", "cors");
@@ -167,8 +166,6 @@ const generateM3u = async (ud) => {
         errs.push(allChans.err);
     if (errs.length === 0) {
         let userChanDetails = await getUserChanDetails(userChans);
-        // Use the filterChannels function
-        userChanDetails.list = filterChannels(userChanDetails.list);
         let m3uStr = '';
         if (userChanDetails.err === null) {
             let chansList = userChanDetails.list;
