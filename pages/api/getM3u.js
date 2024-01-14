@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
 import fetch, { Headers } from "cross-fetch";
 import { replacestrings } from './stringreplace';
-const { filterChannels } = require('./channelfilter'); // Adjust the path accordingly
+const { filterChannels } = require('./channelfilter');
 // const baseUrl = "https://kong-tatasky.videoready.tv";
 const baseUrl = "https://tm.tapi.videoready.tv";
 
