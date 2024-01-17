@@ -90,6 +90,10 @@ const getJWT = async (params, uDetails) => {
         // Promise.all(params.epids.map(x => { return { action: "stream", epids: [ {  } ] } }))
         const response = await fetch(baseUrl + "/auth-service/v1/oauth/token-service/token", requestOptions);
         result = await response.json();
+        if(result?.message.toLowerCase().indexOf("API Rate Limit Exceeded".toLowerCase()) > -1)
+            // throw new Error(result.message)
+            // return Promise.reject(new Error(result.message + 'nooooooo'));
+            return { retry: true };
     }
     catch (error) {
         console.log('error: ', error);
@@ -182,6 +186,9 @@ const generateM3u = async (ud) => {
                             paramsForJwt.epids = chanEnts.map(x => { return { epid: "Subscription", bid: x } });
                             console.log(paramsForJwt);
                             chanJwt = await getJWT(paramsForJwt, ud);
+                            while (chanJwt.retry) {
+                                chanJwt = await getJWT(paramsForJwt, ud);
+                            }
                             chanJwt = chanJwt.token;
                             jwtTokens.push({
                                 ents: chanEnts,
