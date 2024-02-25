@@ -98,7 +98,10 @@ const getJWT = async (params, uDetails) => {
 
     let obj = { err };
     if (err === null)
-        obj.token = result.data.token;
+        if (result.data)
+            obj.token = result.data.token;
+        else
+            throw new Error(result.message)
     return obj;
 }
 
@@ -173,28 +176,42 @@ const generateM3u = async (ud) => {
             if (chansList.length > 0) {
                 //m3uStr = '#EXTM3U    x-tvg-url="http://botallen.live/epg.xml.gz"\n\n';4
                 m3uStr = '#EXTM3U    x-tvg-url="https://www.tsepg.cf/epg.xml.gz"\n\n';
+                const myEnts = [...ent];
+                while (myEnts.length > 0) {
+                    const myEnt = myEnts.shift();
+                    let paramsForJwt = { action: "stream" };
+                    paramsForJwt.epids = [{ epid: "Subscription", bid: myEnt }];
+                    console.log(paramsForJwt);
+                    let chanJwt = null;
+                    try {
+                        chanJwt = await getJWT(paramsForJwt, ud);
+                        // chanJwt = chanJwt.token;
+                        jwtTokens.push({
+                            ent: myEnt,
+                            token: chanJwt.token
+                        });
+                    } catch (err) {
+                        // if (err.message === 'API rate limit exceeded')
+                        myEnts.push(myEnt);
+                    }
+                }
+
                 for (let i = 0; i < chansList.length; i++) {
                     const chanEnts = chansList[i].detail.entitlements.filter(val => ent.includes(val));
                     if (chanEnts.length > 0) {
-                        let chanJwt = jwtTokens.find(x => x.ents.sort().toString() === chanEnts.sort().toString())?.token;
-                        if (!chanJwt) {
-                            let paramsForJwt = { action: "stream" };
-                            paramsForJwt.epids = chanEnts.map(x => { return { epid: "Subscription", bid: x } });
-                            console.log(paramsForJwt);
-                            chanJwt = await getJWT(paramsForJwt, ud);
-                            chanJwt = chanJwt.token;
-                            jwtTokens.push({
-                                ents: chanEnts,
-                                token: chanJwt
-                            });
-                        }
+                        const jwt = jwtTokens.find(j => j.ent === chanEnts.filter(value => jwtTokens.map(j => j.ent).includes(value))[0]).token;
+                        // let chanJwt = jwtTokens.find(x => x.ents.sort().toString() === chanEnts.sort().toString())?.token;
+                        // if (!chanJwt) {
+
+
                         m3uStr += '#EXTINF:-1  tvg-id=\"' + chansList[i].channelMeta.id.toString() + '\"  ';
                         m3uStr += 'tvg-logo=\"' + chansList[i].channelMeta.logo + '\"   ';
                         m3uStr += 'group-title=\"' + (chansList[i].channelMeta.genre[0] !== "HD" ? chansList[i].channelMeta.genre[0] : chansList[i].channelMeta.genre[1]) + '\",   ' + chansList[i].channelMeta.channelName + '\n';
                         m3uStr += '#KODIPROP:inputstream.adaptive.license_type=com.widevine.alpha' + '\n';
                         m3uStr += '#KODIPROP:inputstream.adaptive.license_key=' + chansList[i].detail.dashWidewineLicenseUrl + '&ls_session=';
-                        m3uStr += chanJwt + '\n';
+                        m3uStr += jwt + '\n';
                         m3uStr += chansList[i].detail.dashWidewinePlayUrl + '\n\n';
+                        // }
                     }
                 }
                 console.log('all done!');
